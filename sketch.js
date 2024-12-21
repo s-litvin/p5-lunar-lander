@@ -44,145 +44,43 @@ function initializeUI() {
 }
 
 
-function draw() {
 
+
+function resetAcceleration() {
+  acceleration.mult(0);
+}
+
+function draw() {
   frameRate(slider.value());
 
-  background(120);
+  resetAcceleration();
 
   handleInput();
   handleCollisions();
 
-  touchDown =
-      (v1.y + velocity.y) >= (height - radius - dronBoatHeight - 2) &&
-      (v1.y + velocity.y) <= (height - radius - dronBoatHeight) &&
-      (v1.x + velocity.x >= dronBoat.x - radius / 2) &&
-      ((v1.x + velocity.x + radius) <= (dronBoat.x + dronBoatHeight * 3 * 1.5));
+  applyTouchDown();
+  applyEnvironmentalForces();
 
+  updateDronBoat();
 
-  //////////// GRAVITY /////////
-  tmpVector = createVector(gravity.x, gravity.y);
-  tmpVector.mult(mass);
-  applyForce(tmpVector)
-  ////////////////////////////////////
-
-  // /////////////// DRAG
-  tmpVector = createVector(velocity.x, velocity.y);
-  tmpVector.normalize();
-  tmpVector.mult(-1);
-  let speed = velocity.mag();
-  tmpVector.mult(cfr * 1 * speed * speed);
-  applyForce(tmpVector);
-  //   // //////////////////////////
-
-  /// INPUTS //////////////////
-  ///////////////////////////////////
-
-
-  if (touchDown && throast.x === 0) {
-    velocity.x = dronBoatVelocity;
-  }
-
-  velocity.add(acceleration);
-
-
-  //////// COLLISIONS ///////////
-  ////////////////////////////
-
-
-  velocity.limit(12);
-
-  v1.add(velocity);
-
-
-
-  ///////////// DRONBOAT MOVING /////////
-  dAcc.x += dronBoatVelocity;
-  dVel.add(dAcc);
-  dVel.limit(0.1);
-
-  if (
-      dronBoat.x > width / 2 + 3 * dronBoatHeight ||
-      dronBoat.x < width / 2 - 3 * dronBoatHeight
-  )
-  {
-    dVel.mult(-1);
-    dronBoatVelocity *= -1;
-  }
-
-  dronBoat.add(dVel);
-  dAcc.mult(0);
-  //////////////////////////////////////
-
+  updateRocketVector();
 
   ///////////// VISUALISATIONS //////////////
 
-  tmp = createVector(orientation.x, orientation.y);
-  tmp.rotate(90*3.14/180);
-  tmp.normalize();
-  fill(244,200,200);
-  circle(width/2 + tmp.x, height/2 + tmp.y, 4);
-  text("x-> " + nf(tmp.x, 0, 4) + " y-> " + nf(tmp.y, 0, 4), width/2, 180);
+  background(120);
+  drawOrientationVisualization();
 
-  tmp.mult(5);
-  circle(width/2 + tmp.x, height/2 + tmp.y, 4);
-  text("x-> " + nf(tmp.x, 0, 4) + " y-> " + nf(tmp.y, 0, 4), width/2, 200);
+  drawRocket();
+  drawDronBoat();
 
-  tmp.mult(-0.5);
-  circle(width/2 + tmp.x, height/2 + tmp.y, 4);
-  text("x-> " + nf(tmp.x, 0, 4) + " y-> " + nf(tmp.y, 0, 4), width/2, 220);
+  drawTelemetry();
 
+}
 
-  tmpVector = createVector(velocity.x, velocity.y);
-  tmpVector.setMag(20 * tmpVector.mag());
-  tmpVector.sub(v1);
-  tmpVector.x = sqrt(tmpVector.x * tmpVector.x);
-  tmpVector.y = sqrt(tmpVector.y * tmpVector.y);
-
-
-
-
-  fill(200, 180, 180);
-
-  circle(v1.x, v1.y, 4);
-  circle(v1.x + radius, v1.y, 4);
-  circle(dronBoat.x + dronBoatHeight * 3, height - dronBoatHeight, 4);
-
-
-
-
-  rect(v1.x, v1.y, radius, radius); // rocket
-
-  if (touchDown) {
-    fill(0, 222, 0);
-  }
-
-  rect(dronBoat.x, dronBoat.y, dronBoatHeight * 3, dronBoatHeight); // dron boat
-
-  line(v1.x, v1.y, tmpVector.x, tmpVector.y);
-
-  line(v1.x, v1.y, v1.x + 20 * orientation.x, v1.y + 20 * orientation.y);
-
-
-  fill(240);
-  textSize(14);
-
-  text("grv > " + nf(gravity.x, 0, 3) + " : " + nf(gravity.y, 0, 3), 10, 50);
-  text("acc > " + nf(acceleration.x, 0, 3) + " : " + nf(acceleration.y, 0, 3), 10, 65);
-  text("vel > " + nf(velocity.x, 0, 3) + " : " + nf(velocity.y, 0, 3), 10, 80);
-  text("pos > " + nf(v1.x, 0, 2) + " : " + nf(v1.y, 0, 2), 10, 95);
-  text("mag > " + nf(velocity.mag(), 0, 5), 10, 110);
-  text("mass > " + nf(mass, 0, 3), 10, 125);
-  text("cfr > " + nf(cfr, 0, 4), 10, 140);
-  text("ori > " + nf(orientation.x, 0, 2) + " : " + nf(orientation.y, 0, 2), 10, 155);
-  if (touchDown || (keyIsPressed && keyCode == 32)) {
-    text("thr > " + nf(throast.x, 0, 4) + " : " + nf(throast.y, 0, 2), 10, 170);
-  }
-
-
-
-  acceleration.mult(0);
-
+function updateRocketVector() {
+  velocity.add(acceleration);
+  velocity.limit(12);
+  v1.add(velocity);
 }
 
 function handleInput() {
@@ -257,4 +155,121 @@ function rotateNew(x, y, degree) {
 function applyForce(force) {
   let f = p5.Vector.div(force, mass);
   acceleration.add(f);
+}
+
+
+function drawOrientationVisualization() {
+  let tmp = createVector(orientation.x, orientation.y);
+  tmp.rotate(90 * 3.14 / 180);
+  tmp.normalize();
+
+  fill(244, 200, 200);
+
+  // Small circle
+  circle(width / 2 + tmp.x, height / 2 + tmp.y, 4);
+  text(`x-> ${nf(tmp.x, 0, 4)} y-> ${nf(tmp.y, 0, 4)}`, width / 2, 180);
+
+  // Scaled up vector
+  tmp.mult(5);
+  circle(width / 2 + tmp.x, height / 2 + tmp.y, 4);
+  text(`x-> ${nf(tmp.x, 0, 4)} y-> ${nf(tmp.y, 0, 4)}`, width / 2, 200);
+
+  // Half vector in the opposite direction
+  tmp.mult(-0.5);
+  circle(width / 2 + tmp.x, height / 2 + tmp.y, 4);
+  text(`x-> ${nf(tmp.x, 0, 4)} y-> ${nf(tmp.y, 0, 4)}`, width / 2, 220);
+}
+
+function applyEnvironmentalForces() {
+  // Apply gravity
+  let gravityForce = createVector(gravity.x, gravity.y);
+  gravityForce.mult(mass);
+  applyForce(gravityForce);
+
+  // Apply drag (air resistance)
+  let dragForce = createVector(velocity.x, velocity.y);
+  dragForce.normalize();
+  dragForce.mult(-1);
+  let speed = velocity.mag();
+  dragForce.mult(cfr * speed * speed); // Quadratic drag
+  applyForce(dragForce);
+}
+
+function updateDronBoat() {
+  const MAX_SPEED = 0.1;
+  const MOVEMENT_RANGE = 3 * dronBoatHeight;
+
+  // Update acceleration and velocity
+  dAcc.x += dronBoatVelocity;
+  dVel.add(dAcc);
+  dVel.limit(MAX_SPEED);
+
+  // Reverse direction at edges
+  if (dronBoat.x > width / 2 + MOVEMENT_RANGE || dronBoat.x < width / 2 - MOVEMENT_RANGE) {
+    dVel.mult(-1);
+    dronBoatVelocity *= -1;
+  }
+
+  // Update position
+  dronBoat.add(dVel);
+
+  // Reset acceleration
+  dAcc.mult(0);
+}
+
+function applyTouchDown() {
+  touchDown =
+      (v1.y + velocity.y) >= (height - radius - dronBoatHeight - 2) &&
+      (v1.y + velocity.y) <= (height - radius - dronBoatHeight) &&
+      (v1.x + velocity.x >= dronBoat.x - radius / 2) &&
+      ((v1.x + velocity.x + radius) <= (dronBoat.x + dronBoatHeight * 3 * 1.5));
+
+  if (touchDown && throast.x === 0) {
+    velocity.x = dronBoatVelocity;
+  }
+}
+
+function drawDronBoat() {
+  fill(200, 80, 180);
+
+  if (touchDown) {
+    fill(0, 222, 0);
+  }
+
+  rect(dronBoat.x, dronBoat.y, dronBoatHeight * 3, dronBoatHeight); // dron boat
+  circle(dronBoat.x + dronBoatHeight * 3, height - dronBoatHeight, 4);
+}
+
+
+function drawRocket() {
+  fill(100, 180, 180);
+
+  circle(v1.x, v1.y, 4);
+  circle(v1.x + radius, v1.y, 4);
+  rect(v1.x, v1.y, radius, radius); // rocket
+
+  tmpVector = createVector(velocity.x, velocity.y);
+  tmpVector.setMag(20 * tmpVector.mag());
+  tmpVector.sub(v1);
+  tmpVector.x = sqrt(tmpVector.x * tmpVector.x);
+  tmpVector.y = sqrt(tmpVector.y * tmpVector.y);
+  line(v1.x, v1.y, tmpVector.x, tmpVector.y);
+  line(v1.x, v1.y, v1.x + 20 * orientation.x, v1.y + 20 * orientation.y);
+}
+
+function drawTelemetry() {
+  fill(240);
+  textSize(14);
+
+  text("grv > " + nf(gravity.x, 0, 3) + " : " + nf(gravity.y, 0, 3), 10, 50);
+  text("acc > " + nf(acceleration.x, 0, 3) + " : " + nf(acceleration.y, 0, 3), 10, 65);
+  text("vel > " + nf(velocity.x, 0, 3) + " : " + nf(velocity.y, 0, 3), 10, 80);
+  text("pos > " + nf(v1.x, 0, 2) + " : " + nf(v1.y, 0, 2), 10, 95);
+  text("mag > " + nf(velocity.mag(), 0, 5), 10, 110);
+  text("mass > " + nf(mass, 0, 3), 10, 125);
+  text("cfr > " + nf(cfr, 0, 4), 10, 140);
+  text("ori > " + nf(orientation.x, 0, 2) + " : " + nf(orientation.y, 0, 2), 10, 155);
+  if (touchDown || (keyIsPressed && keyCode === 32)) {
+    text("thr > " + nf(throast.x, 0, 4) + " : " + nf(throast.y, 0, 2), 10, 170);
+  }
 }

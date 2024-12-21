@@ -20,7 +20,11 @@ let touchDown = false;
 
 function setup() {
   createCanvas(840, 480);
+  initializeGameState();
+  initializeUI();
+}
 
+function initializeGameState() {
   v1 = createVector(40, 50);
   throast = createVector(0, 0);
   gravity = createVector(0, 0.04);
@@ -31,12 +35,14 @@ function setup() {
   dronBoat = createVector(width / 2, height - dronBoatHeight);
   dVel = createVector(0, 0);
   dAcc = createVector(0.01, 0);
+}
 
+function initializeUI() {
   slider = createSlider(1, 60, 55, 1);
   slider.position(10, 10);
   slider.style('width', '80px');
-
 }
+
 
 function draw() {
 
@@ -44,11 +50,14 @@ function draw() {
 
   background(120);
 
+  handleInput();
+  handleCollisions();
+
   touchDown =
-    (v1.y + velocity.y) >= (height - radius - dronBoatHeight - 2) &&
-    (v1.y + velocity.y) <= (height - radius - dronBoatHeight) &&
-    (v1.x + velocity.x >= dronBoat.x - radius / 2) &&
-    ((v1.x + velocity.x + radius) <= (dronBoat.x + dronBoatHeight * 3 * 1.5));
+      (v1.y + velocity.y) >= (height - radius - dronBoatHeight - 2) &&
+      (v1.y + velocity.y) <= (height - radius - dronBoatHeight) &&
+      (v1.x + velocity.x >= dronBoat.x - radius / 2) &&
+      ((v1.x + velocity.x + radius) <= (dronBoat.x + dronBoatHeight * 3 * 1.5));
 
 
   //////////// GRAVITY /////////
@@ -66,27 +75,11 @@ function draw() {
   applyForce(tmpVector);
   //   // //////////////////////////
 
-  /// THROAST //////////////////
-  if (keyIsPressed) {
-    if (keyCode === LEFT_ARROW) {
-      orientation = rotateNew(orientation.x, orientation.y, -1);
-    } else if (keyCode === RIGHT_ARROW) {
-      orientation = rotateNew(orientation.x, orientation.y, 1);
-    }
-    if (keyCode == 32 || key == "x" || key == "X") { // spacebar
-      throast = createVector(orientation.x, orientation.y);
-      throast.normalize();
-      throast.mult(6.5);
-      applyForce(throast);
-    }
-  }
-
-
-  
+  /// INPUTS //////////////////
   ///////////////////////////////////
-  
 
-  if (touchDown && throast.x == 0) {
+
+  if (touchDown && throast.x === 0) {
     velocity.x = dronBoatVelocity;
   }
 
@@ -94,36 +87,7 @@ function draw() {
 
 
   //////// COLLISIONS ///////////
-  if ((v1.x + velocity.x) > (width - radius)) {
-    v1.x = 0
-  } else if ((v1.x + velocity.x) < 0) {
-    v1.x = width - radius
-  }
-
-  if (
-    (v1.y + velocity.y) > (height - radius - 1) ||
-    (v1.y + velocity.y) <= 1 ||
-    (touchDown && false)
-  ) {
-    if (velocity.y > 0) { // if directed down
-      velocity.y *= -0.49; // collisions grab energy   
-    } else {
-      velocity.y *= -1;
-    }
-    
-    if (sqrt(velocity.y * velocity.y) < 0.08 && throast.y === 0) { // treshhold
-      velocity.y = 0;
-    }
-    velocity.x -= velocity.x * 0.04; // ground friction
-  }
-
-
-  if (sqrt(velocity.x * velocity.x) < 0.01) { // treshhold
-    velocity.x = 0;
-  }
   ////////////////////////////
-
-
 
 
   velocity.limit(12);
@@ -136,38 +100,38 @@ function draw() {
   dAcc.x += dronBoatVelocity;
   dVel.add(dAcc);
   dVel.limit(0.1);
-  
+
   if (
-    dronBoat.x > width / 2 + 3 * dronBoatHeight || 
-    dronBoat.x < width / 2 - 3 * dronBoatHeight
-  ) 
+      dronBoat.x > width / 2 + 3 * dronBoatHeight ||
+      dronBoat.x < width / 2 - 3 * dronBoatHeight
+  )
   {
     dVel.mult(-1);
     dronBoatVelocity *= -1;
   }
-  
+
   dronBoat.add(dVel);
   dAcc.mult(0);
   //////////////////////////////////////
 
 
   ///////////// VISUALISATIONS //////////////
-  
+
   tmp = createVector(orientation.x, orientation.y);
   tmp.rotate(90*3.14/180);
   tmp.normalize();
   fill(244,200,200);
   circle(width/2 + tmp.x, height/2 + tmp.y, 4);
   text("x-> " + nf(tmp.x, 0, 4) + " y-> " + nf(tmp.y, 0, 4), width/2, 180);
-  
+
   tmp.mult(5);
   circle(width/2 + tmp.x, height/2 + tmp.y, 4);
   text("x-> " + nf(tmp.x, 0, 4) + " y-> " + nf(tmp.y, 0, 4), width/2, 200);
-  
+
   tmp.mult(-0.5);
   circle(width/2 + tmp.x, height/2 + tmp.y, 4);
   text("x-> " + nf(tmp.x, 0, 4) + " y-> " + nf(tmp.y, 0, 4), width/2, 220);
-  
+
 
   tmpVector = createVector(velocity.x, velocity.y);
   tmpVector.setMag(20 * tmpVector.mag());
@@ -175,18 +139,18 @@ function draw() {
   tmpVector.x = sqrt(tmpVector.x * tmpVector.x);
   tmpVector.y = sqrt(tmpVector.y * tmpVector.y);
 
-  
-  
-  
+
+
+
   fill(200, 180, 180);
 
   circle(v1.x, v1.y, 4);
   circle(v1.x + radius, v1.y, 4);
   circle(dronBoat.x + dronBoatHeight * 3, height - dronBoatHeight, 4);
-  
-  
-  
-  
+
+
+
+
   rect(v1.x, v1.y, radius, radius); // rocket
 
   if (touchDown) {
@@ -220,6 +184,66 @@ function draw() {
   acceleration.mult(0);
 
 }
+
+function handleInput() {
+  const ROTATION_ANGLE = 1; // угол вращения в градусах
+  const THRUST_FORCE = 6.5; // сила тяги
+
+  if (keyIsPressed) {
+    if (keyCode === LEFT_ARROW) {
+      orientation = rotateNew(orientation.x, orientation.y, -ROTATION_ANGLE);
+    } else if (keyCode === RIGHT_ARROW) {
+      orientation = rotateNew(orientation.x, orientation.y, ROTATION_ANGLE);
+    }
+    if (keyCode === 32 || key === "x" || key === "X") { // пробел или X
+      throast = createVector(orientation.x, orientation.y);
+      throast.normalize();
+      throast.mult(THRUST_FORCE);
+      applyForce(throast);
+    }
+  }
+}
+
+function handleCollisions() {
+  // Handle collisions on the X axis
+  if ((v1.x + velocity.x) > (width - radius)) {
+    v1.x = 0;
+  } else if ((v1.x + velocity.x) < 0) {
+    v1.x = width - radius;
+  }
+
+  // Handle collisions with the top boundary
+  if ((v1.y + velocity.y) <= 0) {
+    v1.y = 0; // Set position at the top boundary
+    if (velocity.y < 0) { // If moving upwards
+      velocity.y *= -0.5; // Lose energy upon collision
+    }
+  }
+
+  // Handle collisions with the ground
+  if ((v1.y + velocity.y) >= (height - radius)) {
+    v1.y = height - radius; // Set position at ground level
+
+    if (velocity.y > 0) { // If falling
+      velocity.y *= -0.5; // Lose energy upon collision
+    }
+
+    // Stop completely if speed is very low and no thrust is applied
+    if (Math.abs(velocity.y) < 0.1 && throast.mag() === 0) {
+      velocity.y = 0;
+    }
+
+    // Apply friction on the ground
+    velocity.x *= 0.96;
+  }
+
+  // Eliminate jitter at low horizontal speeds
+  if (Math.abs(velocity.x) < 0.01) {
+    velocity.x = 0;
+  }
+}
+
+
 
 function rotateNew(x, y, degree) {
   tmpX = x;

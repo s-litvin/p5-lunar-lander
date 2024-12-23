@@ -8,7 +8,7 @@ let v1;
 let mass = 100;
 let cfr = 0.01;
 let gravity;
-let throast;
+let thrust;
 let velocity;
 let acceleration;
 let orientation;
@@ -26,7 +26,7 @@ function setup() {
 
 function initializeGameState() {
   v1 = createVector(40, 50);
-  throast = createVector(0, 0);
+  thrust = createVector(0, 0);
   gravity = createVector(0, 0.04);
   acceleration = createVector(0, 0);
   velocity = createVector(2, 0);
@@ -94,10 +94,10 @@ function handleInput() {
       orientation = rotateNew(orientation.x, orientation.y, ROTATION_ANGLE);
     }
     if (keyCode === 32 || key === "x" || key === "X") { // пробел или X
-      throast = createVector(orientation.x, orientation.y);
-      throast.normalize();
-      throast.mult(THRUST_FORCE);
-      applyForce(throast);
+      thrust = createVector(orientation.x, orientation.y);
+      thrust.normalize();
+      thrust.mult(THRUST_FORCE);
+      applyForce(thrust);
     }
   }
 }
@@ -127,7 +127,7 @@ function handleCollisions() {
     }
 
     // Stop completely if speed is very low and no thrust is applied
-    if (Math.abs(velocity.y) < 0.1 && throast.mag() === 0) {
+    if (Math.abs(velocity.y) < 0.1 && thrust.mag() === 0) {
       velocity.y = 0;
     }
 
@@ -224,7 +224,7 @@ function applyTouchDown() {
       (v1.x + velocity.x >= dronBoat.x - radius / 2) &&
       ((v1.x + velocity.x + radius) <= (dronBoat.x + dronBoatHeight * 3 * 1.5));
 
-  if (touchDown && throast.x === 0) {
+  if (touchDown && thrust.x === 0) {
     velocity.x = dronBoatVelocity;
   }
 }
@@ -270,6 +270,6 @@ function drawTelemetry() {
   text("cfr > " + nf(cfr, 0, 4), 10, 140);
   text("ori > " + nf(orientation.x, 0, 2) + " : " + nf(orientation.y, 0, 2), 10, 155);
   if (touchDown || (keyIsPressed && keyCode === 32)) {
-    text("thr > " + nf(throast.x, 0, 4) + " : " + nf(throast.y, 0, 2), 10, 170);
+    text("thr > " + nf(thrust.x, 0, 4) + " : " + nf(thrust.y, 0, 2), 10, 170);
   }
 }
